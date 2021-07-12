@@ -5,6 +5,7 @@ import com.example.demo.pojo.Student;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 
@@ -23,4 +24,7 @@ public interface StudentMapper {
 
     @Insert("insert into student_two (`name`,`sex`,`desc`) values (#{name}, #{sex}, #{desc})")
     void insertToMyISAM(Student student);
+
+    @Update("update student set `desc` = #{desc} where id in (select * from (SELECT min(id) FROM `student`)as a)")
+    void updateDesc(String desc);
 }

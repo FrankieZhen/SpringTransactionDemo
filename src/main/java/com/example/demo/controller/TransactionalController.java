@@ -97,7 +97,7 @@ public class TransactionalController {
     //-------- 传播机制 ----/
 
     /**
-     * type :  support、mandatory、requires_new
+     * type :  support、mandatory、requires_new、require
      */
     @RequestMapping("/demo8/{type}")
     public BizResponse demo8(@PathVariable int type) {
@@ -107,7 +107,7 @@ public class TransactionalController {
 
 
     /**
-     * type:start from 0 { requires_new、not_support、never、nested }
+     * type:start from 0 { requires_new、not_support、never}
      */
     @RequestMapping("/demo9/{type}")
     public BizResponse demo9(@PathVariable int type) {
@@ -116,13 +116,25 @@ public class TransactionalController {
     }
 
 
+    /**
+     * nested
+     */
+    @RequestMapping("/demo10")
+    public BizResponse demo10() {
+        studentService.callWithTransactionNest();
+        return BizResponse.success(new Date());
+    }
+
+
 
     /**
      * 测试 Spring和DB的隔离级别
      */
-    @RequestMapping("/demo10")
-    public BizResponse demo10() {
-        studentService.springIsolation();
+    @RequestMapping("/demo11")
+    public BizResponse demo11() {
+        new Thread(() -> studentService.springIsolation()).start();
+
+        new Thread(() -> studentService.springIsolation2()).start();
         return BizResponse.success(new Date());
     }
 

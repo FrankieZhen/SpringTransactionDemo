@@ -12,7 +12,9 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 
@@ -86,7 +88,7 @@ public class StudentServiceImpl implements StudentService {
         studentMapper.insert(student);
         try {
             int i = 10 / 0;
-        }catch (Exception e){
+        } catch (Exception e) {
             System.out.println("异常已被事务内部捕获");
         }
     }
@@ -104,6 +106,7 @@ public class StudentServiceImpl implements StudentService {
     @Transactional(propagation = Propagation.REQUIRED, rollbackFor = RuntimeException.class)
     public void insertSetRollBackFor() throws IOException {
         Student student = getRandomStudent();
+        studentMapper.insert(student);
         throw new IOException();
     }
 
@@ -194,6 +197,10 @@ public class StudentServiceImpl implements StudentService {
             case 2:
                 userService.propagationRequiresNew();
                 break;
+            case 3:
+                Student student = getRandomStudent();
+                studentMapper.insert(student);
+                userService.insertUserWithException();
             default:
                 break;
         }
@@ -214,9 +221,6 @@ public class StudentServiceImpl implements StudentService {
             case 2:
                 userService.propagationNever();
                 break;
-            case 3:
-                userService.propagationNested();
-                break;
             default:
                 break;
         }
@@ -224,15 +228,41 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class,isolation = Isolation.READ_COMMITTED)
+    @Transactional(rollbackFor = Exception.class, isolation = Isolation.READ_UNCOMMITTED)
     public void springIsolation() {
         List<Student> studentList1 = studentMapper.getStudentList();
-        System.out.println(studentList1);
+        System.out.println("事务1第一次读记录为：" + studentList1.get(0));
 
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         List<Student> studentList2 = studentMapper.getStudentList();
-        System.out.println(studentList2);
+        System.out.println("事务1第二次读记录为：" + studentList2.get(0));
 
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class, isolation = Isolation.READ_UNCOMMITTED)
+    public void springIsolation2() {
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        String desc = "隔离级别测试" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+        System.out.println("事务2将记录更改为：" + desc);
+        studentMapper.updateDesc(desc);
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("事务2回滚");
+        int i = 1/0;
     }
 
     @Override
@@ -241,5 +271,19 @@ public class StudentServiceImpl implements StudentService {
         Student student = getRandomStudent();
         studentMapper.insert(student);
         int i = 10 / 0;
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = RuntimeException.class)
+    public void callWithTransactionNest(){
+        Student student = getRandomStudent();
+        studentMapper.insert(student);
+
+        try {
+            userService.propagationNested();
+        }catch (Exception e){
+            System.out.println("方法回滚");
+        }
+        int i  = 1/0;
     }
 }

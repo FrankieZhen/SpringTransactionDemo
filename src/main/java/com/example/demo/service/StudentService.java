@@ -41,4 +41,9 @@ public interface StudentService {
     void springIsolation();
 
     void insertStudentTryCatchOutside() throws Exception;
+
+    void springIsolation2();
+
+    void callWithTransactionNest();
+
 }
